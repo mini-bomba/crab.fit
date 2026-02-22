@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
 
-import GoogleTranslate from '/src/app/privacy/GoogleTranslate'
 import Button from '/src/components/Button/Button'
 import Content from '/src/components/Content/Content'
 import Footer from '/src/components/Footer/Footer'
@@ -28,11 +27,20 @@ const Page = async () => {
 
       <h1>{t('privacy:name')}</h1>
 
-      {!i18n.language.startsWith('en') && <GoogleTranslate language={i18n.language}>{t('privacy:translate')}</GoogleTranslate>}
+      <h3>Fork notice</h3>
+      <P>
+        This is an instance running <a href="https://github.com/mini-bomba/crab.fit">a fork</a> of the original <a href="https://github.com/GRA0007/crab.fit">Crab Fit</a>.
+      </P>
+      <P>
+        This fork removes support for features that require the use of external APIs, such as google calendar, google datastore, vercel analytics, and the unfinished outlook calendar support. All data is stored in a database on the server running this instance, not in google's cloud.
+      </P>
+      <P>
+        Below is the original privacy policy, with edits made by striking out <del>old statements</del> and replacing them with <em>new ones</em>.
+      </P>
 
       <h3>Crab Fit</h3>
       <div id="policy">
-        <P>This SERVICE is provided by Benjamin Grant at no cost and is intended for use as is.</P>
+        <P>This SERVICE is provided by <del>Benjamin Grant</del> <em>mini_bomba</em> at no cost and is intended for use as is.</P>
         <P>This page is used to inform visitors regarding the policies of the collection, use, and disclosure of Personal Information if using the Service.</P>
         <P>If you choose to use the Service, then you agree to the collection and use of information in relation to this policy. The Personal Information that is collected is used for providing and improving the Service. Your information will not be used or shared with anyone except as described in this Privacy Policy.</P>
 
@@ -40,8 +48,8 @@ const Page = async () => {
         <P>The Service uses third party services that may collect information used to identify you.</P>
         <P>Links to privacy policies of the third party service providers used by the Service:</P>
         <Ul>
-          <li><a href="https://www.google.com/policies/privacy/" target="blank">Google Play Services</a> (only used for Google Calendar sync)</li>
-          <li><a href="https://vercel.com/docs/concepts/analytics/privacy-policy" target="blank">Vercel Analytics</a></li>
+          <li><del><a href="https://www.google.com/policies/privacy/" target="blank">Google Play Services</a> (only used for Google Calendar sync)</del> <em>- dependency removed by fork</em></li>
+          <li><del><a href="https://vercel.com/docs/concepts/analytics/privacy-policy" target="blank">Vercel Analytics</a></del> <em>- dependency removed by fork</em></li>
         </Ul>
 
         <h2>Log Data</h2>
@@ -49,9 +57,10 @@ const Page = async () => {
 
         <h2>Cookies</h2>
         <P>Cookies are files with a small amount of data that are commonly used as anonymous unique identifiers. These are sent to your browser from the websites that you visit and are stored on your device's internal memory.</P>
-        <P>Cookies are used by Google Analytics to track you across the web and provide anonymous statistics to improve the Service.</P>
+        <P><del>Cookies are used by Google Analytics to track you across the web and provide anonymous statistics to improve the Service.</del> <em>Google Analytics doesn't appear to be used anywhere?</em></P>
 
         <h2>Service Providers</h2>
+        <del>
         <P>Third-party companies may be employed for the following reasons:</P>
         <Ul>
           <li>To facilitate the Service</li>
@@ -60,6 +69,8 @@ const Page = async () => {
           <li>To assist in analyzing how the Service is used</li>
         </Ul>
         <P>To perform these tasks, the third parties may have access to your Personal Information, but are obligated not to disclose or use this information for any purpose except the above.</P>
+        </del>
+        <P><em>All dependencies on third-party services should've been removed by the fork.</em></P>
 
         <h2>Security</h2>
         <P>Personal Information that is shared via the Service is protected, however remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, so take care when sharing Personal Information.</P>
@@ -73,10 +84,10 @@ const Page = async () => {
 
         <h2>Changes to This Privacy Policy</h2>
         <P>This Privacy Policy may be updated from time to time. Thus, you are advised to review this page periodically for any changes.</P>
-        <P>Last updated: 2023-06-10</P>
+        <P>Last updated: <del>2023-06-10</del> <em>2026-02-22</em></P>
 
         <h2>Contact Us</h2>
-        <P>If you have any questions or suggestions about the Privacy Policy, do not hesitate to contact us at <a href="mailto:contact@crab.fit">contact@crab.fit</a>.</P>
+        <P>If you have any questions or suggestions about the Privacy Policy, do not hesitate to contact us at <del><a href="mailto:contact@crab.fit">contact@crab.fit</a></del>. <em>Use any of the contact information provided at the <a href="https://minibomba.pro/">fork author's homepage</a>, preferably discord or matrix.</em></P>
       </div>
     </Content>
 
