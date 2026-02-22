@@ -13,23 +13,26 @@ const karla = Karla({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://crab.fit'),
+
   title: {
     absolute: 'Crab Fit',
     template: '%s - Crab Fit',
   },
+
   keywords: ['crab', 'fit', 'crabfit', 'schedule', 'availability', 'availabilities', 'when2meet', 'doodle', 'meet', 'plan', 'time', 'timezone'],
   description: 'Enter your availability to find a time that works for everyone!',
-  themeColor: '#F79E00',
   manifest: 'manifest.json',
+
   openGraph: {
     title: 'Crab Fit',
     description: 'Enter your availability to find a time that works for everyone!',
     url: '/',
   },
+
   icons: {
     icon: 'favicon.ico',
     apple: 'logo192.png',
-  },
+  }
 }
 
 const RootLayout = async ({ children }: { children: React.ReactNode }) => {
@@ -47,3 +50,7 @@ const RootLayout = async ({ children }: { children: React.ReactNode }) => {
 }
 
 export default RootLayout
+
+export const viewport = {
+  themeColor: '#F79E00'
+};

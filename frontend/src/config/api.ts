@@ -46,7 +46,7 @@ export type StatsResponse = z.infer<typeof StatsResponse>
 const get = async <S extends z.Schema>(url: string, schema: S, auth?: string, nextOptions?: NextFetchRequestConfig): Promise<ReturnType<S['parse']>> => {
   const res = await fetch(new URL(url, API_BASE), {
     headers: {
-      ...auth && { Authorization: `Bearer ${auth}` },
+      ...(auth && { Authorization: `Bearer ${auth}` }),
     },
     next: nextOptions,
   })
@@ -60,7 +60,7 @@ const post = async <S extends z.Schema>(url: string, schema: S, input: unknown, 
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...auth && { Authorization: `Bearer ${auth}` },
+      ...(auth && { Authorization: `Bearer ${auth}` }),
     },
     body: JSON.stringify(input),
   })

@@ -21,6 +21,6 @@ export const calculateRows = (dates: Temporal.ZonedDateTime[]): (Temporal.PlainT
     ...rows,
     ...partition,
     partition[partition.length - 1].add({ minutes: 15 }),
-    ...i < partitionedDates.length - 1 ? [null, null] : [], // Add spacer in between partitions
-  ], [] as (Temporal.PlainTime | null)[])
+    ...(i < partitionedDates.length - 1 ? [null, null] : []), // Add spacer in between partitions
+  ], [] as (Temporal.PlainTime | null)[]);
 }

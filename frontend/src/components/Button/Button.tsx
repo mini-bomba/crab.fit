@@ -40,8 +40,8 @@ const Button: React.FC<ButtonProps> = ({
       !children && icon && styles.iconButton,
     ),
     style: {
-      ...surfaceColor && { '--override-surface-color': surfaceColor, '--override-text-color': '#FFFFFF' },
-      ...shadowColor && { '--override-shadow-color': shadowColor },
+      ...(surfaceColor && { '--override-surface-color': surfaceColor, '--override-text-color': '#FFFFFF' }),
+      ...(shadowColor && { '--override-shadow-color': shadowColor }),
       ...style,
     },
     children: <div>{icon}{children}</div>,

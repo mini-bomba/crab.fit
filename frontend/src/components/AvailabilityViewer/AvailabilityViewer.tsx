@@ -79,34 +79,36 @@ const AvailabilityViewer = ({ times, people, table }: AvailabilityViewerProps) =
           }
           const color = palette[(tempFocus && peopleHere.length) ? Math.min(max, palette.length - 1) : Math.max(peopleHere.length - min, 0)]
 
-          return <div
-            key={y}
-            className={makeClass(
-              styles.time,
-              styles.nonEditable,
-              (focusCount === undefined || focusCount === peopleHere.length) && highlight && (peopleHere.length === max || tempFocus) && peopleHere.length > 0 && styles.highlight,
-            )}
-            style={{
-              backgroundColor: (focusCount === undefined || focusCount === peopleHere.length) ? color.string : 'transparent',
-              '--highlight-color': color.highlight,
-              ...cell.minute !== 0 && cell.minute !== 30 && { borderTopColor: 'transparent' },
-              ...cell.minute === 30 && { borderTopStyle: 'dotted' },
-            } as React.CSSProperties}
-            aria-label={peopleHere.join(', ')}
-            onMouseEnter={e => {
-              setTooltip({
-                anchor: e.currentTarget,
-                available: `${peopleHere.length} / ${filteredPeople.length} ${t('available')}`,
-                date: cell.label,
-                people: peopleHere,
-              })
-            }}
-            onClick={() => {
-              const clipboardMessage = `${t('group.clipboard_message', { date: cell.label })}:\n${peopleHere.join(', ')}`
-              navigator.clipboard.writeText(clipboardMessage)
-            }}
-            onMouseLeave={() => setTooltip(undefined)}
-          />
+          return (
+            <div
+              key={y}
+              className={makeClass(
+                styles.time,
+                styles.nonEditable,
+                (focusCount === undefined || focusCount === peopleHere.length) && highlight && (peopleHere.length === max || tempFocus) && peopleHere.length > 0 && styles.highlight,
+              )}
+              style={{
+                backgroundColor: (focusCount === undefined || focusCount === peopleHere.length) ? color.string : 'transparent',
+                '--highlight-color': color.highlight,
+                ...(cell.minute !== 0 && cell.minute !== 30 && { borderTopColor: 'transparent' }),
+                ...(cell.minute === 30 && { borderTopStyle: 'dotted' }),
+              } as React.CSSProperties}
+              aria-label={peopleHere.join(', ')}
+              onMouseEnter={e => {
+                setTooltip({
+                  anchor: e.currentTarget,
+                  available: `${peopleHere.length} / ${filteredPeople.length} ${t('available')}`,
+                  date: cell.label,
+                  people: peopleHere,
+                })
+              }}
+              onClick={() => {
+                const clipboardMessage = `${t('group.clipboard_message', { date: cell.label })}:\n${peopleHere.join(', ')}`
+                navigator.clipboard.writeText(clipboardMessage)
+              }}
+              onMouseLeave={() => setTooltip(undefined)}
+            />
+          );
         })}
       </div>
     </div> : <div className={styles.columnSpacer} />}

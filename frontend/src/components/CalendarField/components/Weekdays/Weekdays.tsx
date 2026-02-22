@@ -32,7 +32,7 @@ const Weekdays = ({ value, onChange }: WeekdaysProps) => {
   }, [])
 
   const startPos = useRef(0)
-  const mode = useRef<'add' | 'remove'>()
+  const mode = useRef<'add' | 'remove'>(undefined)
 
   const handleFinishSelection = useCallback(() => {
     if (mode.current === 'add') {
