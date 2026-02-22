@@ -1,31 +1,31 @@
-# This dockerfile builds the API and runs it on a minimal container with the Datastore adaptor
+# This dockerfile builds the API and runs it on a minimal container
+ARG STORAGE_ADAPTOR
 
-FROM rust:latest as builder
+FROM docker.io/library/alpine:latest as builder
 
-# Install CA Certs for Hyper
-RUN apt-get install -y --no-install-recommends ca-certificates
-RUN update-ca-certificates
+RUN apk --no-cache add curl rust cargo pkgconfig openssl-dev
 
 WORKDIR /usr/src/app
-COPY . .
 # Will build and cache the binary and dependent crates in release mode
-RUN --mount=type=cache,target=/usr/local/cargo,from=rust:latest,source=/usr/local/cargo \
+RUN --mount=type=bind,target=/usr/src/app \
     --mount=type=cache,target=target \
-    cargo build --release --features ${STORAGE_ADAPTOR:-sql}-adaptor && mv ./target/release/crabfit-api ./api
+    --mount=type=cache,target=/root/.cargo \
+    cargo build --release --locked --features ${STORAGE_ADAPTOR:-sql}-adaptor && mv ./target/release/crabfit-api /api
 
 # Runtime image
-FROM debian:bullseye-slim
+FROM docker.io/library/alpine:latest
+
+RUN apk --no-cache add libgcc
 
 # Run as "app" user
-RUN useradd -ms /bin/bash app
+RUN adduser -D app
 
 USER app
 WORKDIR /app
 
 # Get compiled binaries from builder's cargo install directory
-COPY --from=builder /usr/src/app/api /app/api
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /api /app/api
 
 # Run the app
 EXPOSE 3000
-CMD ./api
+CMD ["/app/api"]
