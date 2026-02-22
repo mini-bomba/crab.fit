@@ -3,7 +3,8 @@ ARG STORAGE_ADAPTOR
 
 FROM docker.io/library/alpine:latest as builder
 
-RUN apk --no-cache add curl rust cargo pkgconfig openssl-dev
+RUN --mount=type=cache,target=/etc/apk/cache \
+    apk add curl rust cargo pkgconfig openssl-dev
 
 WORKDIR /usr/src/app
 # Will build and cache the binary and dependent crates in release mode
