@@ -4,7 +4,7 @@ use axum::{
     Json,
 };
 use common::{Adaptor, Event};
-use rand::{seq::SliceRandom, thread_rng, Rng};
+use rand::{random_range, rng, seq::IndexedRandom};
 use regex::Regex;
 
 use crate::{
@@ -114,8 +114,8 @@ fn generate_name() -> String {
 
     format!(
         "{} {} Crab",
-        adjectives.choose(&mut thread_rng()).unwrap(),
-        crabs.choose(&mut thread_rng()).unwrap()
+        adjectives.choose(&mut rng()).unwrap(),
+        crabs.choose(&mut rng()).unwrap()
     )
 }
 
@@ -125,7 +125,7 @@ fn generate_id(name: &str) -> String {
     if id.replace('-', "").is_empty() {
         id = encode_name(generate_name());
     }
-    let number = thread_rng().gen_range(100000..=999999);
+    let number = random_range(100000..=999999);
     format!("{}-{}", id, number)
 }
 

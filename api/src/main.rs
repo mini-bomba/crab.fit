@@ -1,19 +1,18 @@
 use std::{env, net::SocketAddr, sync::Arc};
 
 use axum::{
-    error_handling::HandleErrorLayer,
     extract,
     http::{
         header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
         HeaderValue, Method,
     },
     routing::{get, patch, post},
-    BoxError, Router, Server,
+    Router,
 };
 use routes::*;
 use tokio::sync::Mutex;
 use tower::ServiceBuilder;
-use tower_governor::{errors::display_error, governor::GovernorConfigBuilder, GovernorLayer};
+use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::Level;
 use utoipa::OpenApi;
@@ -63,20 +62,12 @@ async fn main() {
     // Rate limiting configuration (using tower_governor)
     // From the docs: Allows bursts with up to 20 requests and replenishes
     // one element after 500ms, based on peer IP.
-    let governor_config = Box::new(
-        GovernorConfigBuilder::default()
-            .burst_size(20)
-            .finish()
-            .unwrap(),
-    );
+    let governor_config = GovernorConfigBuilder::default()
+        .burst_size(20)
+        .finish()
+        .unwrap();
     let rate_limit = ServiceBuilder::new()
-        // Handle errors from governor and convert into HTTP responses
-        .layer(HandleErrorLayer::new(|e: BoxError| async move {
-            display_error(e)
-        }))
-        .layer(GovernorLayer {
-            config: Box::leak(governor_config),
-        });
+        .layer(GovernorLayer::new(governor_config));
 
     let app = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
@@ -99,19 +90,17 @@ async fn main() {
         .layer(rate_limit)
         .layer(TraceLayer::new_for_http());
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind to TCP port 3000");
 
     println!(
-        "🦀 Crab Fit API listening at http://{} in {} mode",
-        addr,
+        "🦀 Crab Fit API listening at http://0.0.0.0:3000 in {} mode",
         if cfg!(debug_assertions) {
             "debug"
         } else {
             "release"
         }
     );
-    Server::bind(&addr)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c()
                 .await

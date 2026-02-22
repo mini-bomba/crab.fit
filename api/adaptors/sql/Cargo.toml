@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.68"
+async-trait = "0.1.89"
 common = { path = "../../common" }
-sea-orm = { version = "0.11.3", features = [ "macros", "sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-native-tls" ] }
-serde = { version = "1.0.162", features = [ "derive" ] }
+sea-orm = { version = "1.1.19", features = [ "macros", "sqlx-mysql", "sqlx-postgres", "sqlx-sqlite", "runtime-tokio-native-tls" ] }
+serde = { version = "1.0.228", features = [ "derive" ] }
 async-std = { version = "1", features = ["attributes", "tokio1"] }
-sea-orm-migration = "0.11.0"
-serde_json = "1.0.96"
-chrono = "0.4.24"
+sea-orm-migration = "1.1.19"
+serde_json = "1.0.149"
+chrono = "0.4.43"
+strum = { version = "0.27.2", features = ["derive"] }

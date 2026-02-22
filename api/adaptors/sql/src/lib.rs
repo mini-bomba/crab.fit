@@ -6,13 +6,13 @@ use common::{Adaptor, Event, Person, Stats};
 use entity::{event, person, stats};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{
-    strum::Display,
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
     ColumnTrait, Database, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter,
     TransactionError, TransactionTrait, TryIntoModel,
 };
 use serde_json::json;
+use strum::Display;
 
 mod entity;
 mod migration;
@@ -214,8 +214,8 @@ impl From<event::Model> for Event {
         Self {
             id: value.id,
             name: value.name,
-            created_at: DateTime::<Utc>::from_utc(value.created_at, Utc),
-            visited_at: DateTime::<Utc>::from_utc(value.visited_at, Utc),
+            created_at: value.created_at.and_utc(),
+            visited_at: value.visited_at.and_utc(),
             times: serde_json::from_value(value.times).unwrap_or(vec![]),
             timezone: value.timezone,
         }
@@ -227,7 +227,7 @@ impl From<person::Model> for Person {
         Self {
             name: value.name,
             password_hash: value.password_hash,
-            created_at: DateTime::<Utc>::from_utc(value.created_at, Utc),
+            created_at: value.created_at.and_utc(),
             availability: serde_json::from_value(value.availability).unwrap_or(vec![]),
         }
     }
