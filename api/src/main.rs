@@ -1,4 +1,4 @@
-use std::{env, net::SocketAddr, sync::Arc};
+use std::{env, fs, net::SocketAddr, os::linux::fs::MetadataExt, sync::Arc};
 
 use axum::{
     extract,
@@ -9,8 +9,9 @@ use axum::{
     routing::{get, patch, post},
     Router,
 };
+use real::{IpExtractor, RealIpLayer};
 use routes::*;
-use tokio::sync::Mutex;
+use tokio::{net::UnixListener, sync::Mutex};
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::Level;
@@ -62,6 +63,20 @@ async fn main() {
         .finish()
         .unwrap();
 
+    let mut real_ip_config = IpExtractor::default();
+    // comma delimited list of headers to accept
+    if let Ok(headers) = env::var("REAL_IP_HEADERS") {
+        real_ip_config = real_ip_config.with_headers(
+            headers
+                .split(",")
+                .filter(|s| !s.is_empty())
+                .map(str::to_owned)
+                .collect(),
+        )
+    } else {
+        println!("WARNING! No environment variable named REAL_IP_HEADERS found, will use default list of headers from real - this may allow malicious users to evade rate limits by sending these trusted headers.\nIf this service is not exposed behind a proxy, you should set this variable to an empty string, or a single comma.");
+    }
+
     let app = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(get_root))
@@ -80,27 +95,64 @@ async fn main() {
         .route("/tasks/cleanup", get(tasks::cleanup))
         .with_state(shared_state)
         .layer(cors)
+        .layer(RealIpLayer::with_extractor(real_ip_config))
         .layer(GovernorLayer::new(governor_config))
         .layer(TraceLayer::new_for_http());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind to TCP port 3000");
+    let address = env::var("LISTEN_ADDR").unwrap_or("0.0.0.0:3000".to_owned());
 
-    println!(
-        "🦀 Crab Fit API listening at http://0.0.0.0:3000 in {} mode",
-        if cfg!(debug_assertions) {
-            "debug"
-        } else {
-            "release"
+    if let Some(path) = address.strip_prefix("unix:") {
+        if let Ok(stat) = fs::metadata(path) {
+            // if it exists, check if it's a socket
+            if stat.st_mode() & 0o140000 != 0 {
+                // yeet
+                println!("Socket at {path} already exists, trying to remove");
+                if let Err(e) = fs::remove_file(path) {
+                    eprintln!("Minor issue: failed to remove existing socket at {path}, we might fail to bind to this location. {e:?}");
+                }
+            }
         }
-    );
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c()
-                .await
-                .expect("Failed to install Ctrl+C handler")
-        })
-        .await
-        .unwrap();
+        let listener = UnixListener::bind(path).unwrap_or_else(|e| panic!("Failed to bind to unix socket at {path}: {e:?}"));
+
+        println!(
+            "🦀 Crab Fit API listening at {address} in {} mode",
+            if cfg!(debug_assertions) {
+                "debug"
+            } else {
+                "release"
+            }
+        );
+
+        axum::serve(listener, app.into_make_service())
+            .with_graceful_shutdown(async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("Failed to install Ctrl+C handler")
+            })
+            .await
+            .unwrap();
+    } else {
+        let listener = tokio::net::TcpListener::bind(&address).await.unwrap_or_else(|e| panic!("Failed to pind to TCP socket at {address}: {e:?}"));
+
+        println!(
+            "🦀 Crab Fit API listening at http://{address} in {} mode",
+            if cfg!(debug_assertions) {
+                "debug"
+            } else {
+                "release"
+            }
+        );
+
+        axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
+            .with_graceful_shutdown(async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("Failed to install Ctrl+C handler")
+            })
+            .await
+            .unwrap();
+    }
+
 }
 
 async fn get_root() -> String {

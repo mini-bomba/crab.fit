@@ -34,3 +34,4 @@ tower = "0.5.3"
 utoipa = { version = "5.4.0", features = ["axum_extras", "preserve_order"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum", "debug-embed"] }
 base64 = "0.22.1"
+real = { version = "0.1.4", features = ["axum"] }
