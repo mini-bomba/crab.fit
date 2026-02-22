@@ -7,7 +7,6 @@ import { useTranslation } from '/src/i18n/client'
 import { calculateTable, makeClass, parseSpecificDate } from '/src/utils'
 
 import styles from './AvailabilityEditor.module.scss'
-import GoogleCalendar from './components/GoogleCalendar/GoogleCalendar'
 import RecentEvents from './components/RecentEvents/RecentEvents'
 import viewerStyles from '../AvailabilityViewer/AvailabilityViewer.module.scss'
 import Skeleton from '../AvailabilityViewer/components/Skeleton/Skeleton'
@@ -69,13 +68,6 @@ const AvailabilityEditor = ({ eventId, times, timezone, value = [], onChange, ta
     </Content>
     {times[0]?.length === 13 && <Content>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <GoogleCalendar
-          timezone={timezone}
-          timeStart={parseSpecificDate(times[0])}
-          timeEnd={parseSpecificDate(times[times.length - 1]).add({ minutes: 15 })}
-          times={times}
-          onImport={onChange}
-        />
         <RecentEvents
           eventId={eventId}
           times={times}
