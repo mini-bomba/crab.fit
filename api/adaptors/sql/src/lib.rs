@@ -1,4 +1,4 @@
-use std::{env, error::Error};
+use std::{env, error::Error, fs::OpenOptions};
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -184,6 +184,19 @@ impl SqlAdaptor {
     pub async fn new() -> Self {
         let connection_string =
             env::var("DATABASE_URL").expect("Expected DATABASE_URL environment variable");
+
+        // for sqlite: if it's not an in-memory db, create the db file first
+        if let Some(path) = connection_string.strip_prefix("sqlite:") {
+            if path != ":memory"
+                && OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(path)
+                    .is_ok()
+            {
+                println!("🪶 Created new SQLite database at {path}!");
+            }
+        }
 
         // Connect to the database
         let db = Database::connect(&connection_string)
