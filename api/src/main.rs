@@ -9,7 +9,6 @@ use axum::{
     routing::{get, patch, post},
     Router,
 };
-use real::{IpExtractor, RealIpLayer};
 use routes::*;
 use tokio::{net::UnixListener, sync::Mutex};
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
@@ -18,12 +17,13 @@ use tracing::Level;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::adaptors::create_adaptor;
+use crate::{adaptors::create_adaptor, governor::DynamicKeyExtractor};
 use crate::docs::ApiDoc;
 
 mod adaptors;
 mod docs;
 mod errors;
+mod governor;
 mod payloads;
 mod routes;
 
@@ -60,22 +60,10 @@ async fn main() {
     // one element after 500ms, based on peer IP.
     let governor_config = GovernorConfigBuilder::default()
         .burst_size(20)
+        .key_extractor(DynamicKeyExtractor::from_env())
         .finish()
         .unwrap();
 
-    let mut real_ip_config = IpExtractor::default();
-    // comma delimited list of headers to accept
-    if let Ok(headers) = env::var("REAL_IP_HEADERS") {
-        real_ip_config = real_ip_config.with_headers(
-            headers
-                .split(",")
-                .filter(|s| !s.is_empty())
-                .map(str::to_owned)
-                .collect(),
-        )
-    } else {
-        println!("WARNING! No environment variable named REAL_IP_HEADERS found, will use default list of headers from real - this may allow malicious users to evade rate limits by sending these trusted headers.\nIf this service is not exposed behind a proxy, you should set this variable to an empty string, or a single comma.");
-    }
 
     let app = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
@@ -95,7 +83,6 @@ async fn main() {
         .route("/tasks/cleanup", get(tasks::cleanup))
         .with_state(shared_state)
         .layer(cors)
-        .layer(RealIpLayer::with_extractor(real_ip_config))
         .layer(GovernorLayer::new(governor_config))
         .layer(TraceLayer::new_for_http());
 
