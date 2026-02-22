@@ -2,7 +2,6 @@ import { Metadata } from 'next'
 
 import Button from '/src/components/Button/Button'
 import Content from '/src/components/Content/Content'
-import Footer from '/src/components/Footer/Footer'
 import Header from '/src/components/Header/Header'
 import { P, Ul } from '/src/components/Paragraph/Text'
 import Section from '/src/components/Section/Section'
@@ -96,8 +95,6 @@ const Page = async () => {
         <Button href="/">{t('common:cta')}</Button>
       </Content>
     </Section>
-
-    <Footer />
   </>
 }
 
