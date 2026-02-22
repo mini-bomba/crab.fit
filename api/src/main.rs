@@ -11,7 +11,6 @@ use axum::{
 };
 use routes::*;
 use tokio::sync::Mutex;
-use tower::ServiceBuilder;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::Level;
@@ -50,13 +49,9 @@ async fn main() {
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
         .allow_methods([Method::GET, Method::POST, Method::PATCH])
         .allow_origin(
-            if cfg!(debug_assertions) {
-                "http://localhost:1234".to_owned()
-            } else {
-                env::var("FRONTEND_URL").expect("Missing FRONTEND_URL environment variable")
-            }
-            .parse::<HeaderValue>()
-            .unwrap(),
+            env::var("FRONTEND_URL").expect("Missing FRONTEND_URL environment variable")
+                .parse::<HeaderValue>()
+                .unwrap(),
         );
 
     // Rate limiting configuration (using tower_governor)
@@ -66,28 +61,26 @@ async fn main() {
         .burst_size(20)
         .finish()
         .unwrap();
-    let rate_limit = ServiceBuilder::new()
-        .layer(GovernorLayer::new(governor_config));
 
     let app = Router::new()
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(get_root))
         .route("/stats", get(stats::get_stats))
         .route("/event", post(event::create_event))
-        .route("/event/:event_id", get(event::get_event))
-        .route("/event/:event_id/people", get(person::get_people))
+        .route("/event/{event_id}", get(event::get_event))
+        .route("/event/{event_id}/people", get(person::get_people))
         .route(
-            "/event/:event_id/people/:person_name",
+            "/event/{event_id}/people/{person_name}",
             get(person::get_person),
         )
         .route(
-            "/event/:event_id/people/:person_name",
+            "/event/{event_id}/people/{person_name}",
             patch(person::update_person),
         )
         .route("/tasks/cleanup", get(tasks::cleanup))
         .with_state(shared_state)
         .layer(cors)
-        .layer(rate_limit)
+        .layer(GovernorLayer::new(governor_config))
         .layer(TraceLayer::new_for_http());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind to TCP port 3000");
