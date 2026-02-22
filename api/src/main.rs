@@ -1,4 +1,4 @@
-use std::{env, fs, net::SocketAddr, os::linux::fs::MetadataExt, sync::Arc};
+use std::{env, fs::{self, Permissions}, net::SocketAddr, os::{linux::fs::MetadataExt, unix::fs::PermissionsExt}, sync::Arc};
 
 use axum::{
     extract,
@@ -113,6 +113,12 @@ async fn main() {
             }
         }
         let listener = UnixListener::bind(path).unwrap_or_else(|e| panic!("Failed to bind to unix socket at {path}: {e:?}"));
+
+        // maybe chown
+        if let Ok(mode) = env::var("UNIX_SOCK_MODE") {
+            let perms = Permissions::from_mode(u32::from_str_radix(&mode, 8).expect("expected UNIX_SOCK_MODE to be a valid base8 int"));
+            fs::set_permissions(path, perms).expect("failed to chmod the new unix socket");
+        }
 
         println!(
             "🦀 Crab Fit API listening at {address} in {} mode",
