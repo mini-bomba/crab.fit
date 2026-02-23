@@ -44,7 +44,7 @@ async fn do_cleanup<A: Adaptor>(adaptor: &A) -> Result<(), A::Error> {
     info!("Running cleanup task");
 
     let result = adaptor
-        .delete_events(Utc::now() - Duration::days(90))
+        .delete_events(Utc::now() - Duration::days(30))
         .await?;
 
     info!(

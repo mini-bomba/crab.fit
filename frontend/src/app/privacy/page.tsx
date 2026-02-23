@@ -73,7 +73,7 @@ const Page = async () => {
 
         <h2>Security</h2>
         <P>Personal Information that is shared via the Service is protected, however remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, so take care when sharing Personal Information.</P>
-        <p className={styles.note}>Events that are created will be automatically permanently erased from storage after <strong>3 months</strong> of inactivity.</p>
+        <p className={styles.note}>Events that are created will be automatically permanently erased from storage after <strong><del>3</del> <em>1</em> month<del>s</del></strong> of inactivity.</p>
 
         <h2>Links to Other Sites</h2>
         <P>The Service may contain links to other sites. If you click on a third-party link, you will be directed to that site. Note that these external sites are not operated by the Service. Therefore, you are advised to review the Privacy Policy of these websites.</P>
