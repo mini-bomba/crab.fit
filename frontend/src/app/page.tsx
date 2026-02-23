@@ -4,7 +4,6 @@ import Link from 'next/link'
 
 import Content from '/src/components/Content/Content'
 import CreateForm from '/src/components/CreateForm/CreateForm'
-import DownloadButtons from '/src/components/DownloadButtons/DownloadButtons'
 import Header from '/src/components/Header/Header'
 import { P } from '/src/components/Paragraph/Text'
 import Recents from '/src/components/Recents/Recents'
@@ -38,8 +37,6 @@ const Page = async () => {
         <P><Trans i18nKey="about.content.p1" t={t} i18n={i18n}>_<br /><Link href="/how-to" rel="help">_</Link>_</Trans></P>
 
         <Video />
-
-        <DownloadButtons />
 
         <P><Trans i18nKey="about.content.p3" t={t} i18n={i18n}>_<a href="https://bengrant.dev" target="_blank" rel="noreferrer noopener author">_</a>_</Trans></P>
         <P>This server is running a <a href="https://github.com/mini-bomba/crab.fit">modified &amp; updated version</a> of the <a href="https://github.com/GRA0007/crab.fit">original Crab Fit</a>, made by <a href="https://minibomba.pro">mini_bomba</a>.</P>
