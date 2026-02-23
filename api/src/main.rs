@@ -1,5 +1,6 @@
 use std::{env, fs::{self, Permissions}, net::SocketAddr, os::{linux::fs::MetadataExt, unix::fs::PermissionsExt}, sync::Arc};
 
+use async_signal::{Signal, Signals};
 use axum::{
     extract,
     http::{
@@ -9,6 +10,7 @@ use axum::{
     routing::{get, patch, post},
     Router,
 };
+use futures::{FutureExt, StreamExt};
 use routes::*;
 use tokio::{net::UnixListener, sync::Mutex};
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
@@ -17,7 +19,7 @@ use tracing::Level;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::{adaptors::create_adaptor, governor::DynamicKeyExtractor};
+use crate::{adaptors::create_adaptor, governor::DynamicKeyExtractor, routes::tasks::cleanup_worker};
 use crate::docs::ApiDoc;
 
 mod adaptors;
@@ -81,12 +83,26 @@ async fn main() {
             patch(person::update_person),
         )
         .route("/tasks/cleanup", get(tasks::cleanup))
-        .with_state(shared_state)
+        .with_state(shared_state.clone())
         .layer(cors)
         .layer(GovernorLayer::new(governor_config))
         .layer(TraceLayer::new_for_http());
 
+    // prepare the signal listener
+    let signal_handler = Signals::new([
+        Signal::Int,
+        Signal::Term,
+        Signal::Hup,
+        Signal::Quit,
+    ]).expect("Failed to attach signal handler");
+    // box, leak
+    let signal_handler = Box::leak(Box::new(signal_handler));
+    // get first, drop result, share
+    let signal_handler = signal_handler.next().map(|_| ()).shared();
+
     let address = env::var("LISTEN_ADDR").unwrap_or("0.0.0.0:3000".to_owned());
+
+    let cleanup_runner;
 
     if let Some(path) = address.strip_prefix("unix:") {
         if let Ok(stat) = fs::metadata(path) {
@@ -116,12 +132,10 @@ async fn main() {
             }
         );
 
+        cleanup_runner = tokio::spawn(cleanup_worker(signal_handler.clone(), shared_state));
+
         axum::serve(listener, app.into_make_service())
-            .with_graceful_shutdown(async {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("Failed to install Ctrl+C handler")
-            })
+            .with_graceful_shutdown(signal_handler.clone())
             .await
             .unwrap();
     } else {
@@ -136,16 +150,16 @@ async fn main() {
             }
         );
 
+        cleanup_runner = tokio::spawn(cleanup_worker(signal_handler.clone(), shared_state));
+
         axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
-            .with_graceful_shutdown(async {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("Failed to install Ctrl+C handler")
-            })
+            .with_graceful_shutdown(signal_handler.clone())
             .await
             .unwrap();
     }
-
+    
+    // await the termination of the cleanup worker
+    cleanup_runner.await.expect("Cleanup runner panicked");
 }
 
 async fn get_root() -> String {

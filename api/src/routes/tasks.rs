@@ -1,11 +1,13 @@
-use std::env;
+use std::{env, future::Future, sync::Arc};
 
 use axum::{extract, http::HeaderMap};
 use chrono::{Duration, Utc};
 use common::Adaptor;
-use tracing::info;
+use futures::{future::Shared};
+use tokio::{sync::Mutex, time::sleep};
+use tracing::{error, info};
 
-use crate::{errors::ApiError, State};
+use crate::{ApiState, State, errors::ApiError};
 
 #[utoipa::path(
     get,
@@ -33,19 +35,38 @@ pub async fn cleanup<A: Adaptor>(
         return Err(ApiError::NotAuthorized);
     }
 
-    info!("Running cleanup task");
+    do_cleanup(&state.lock().await.adaptor)
+        .await
+        .map_err(ApiError::AdaptorError)
+}
 
-    let adaptor = &state.lock().await.adaptor;
+async fn do_cleanup<A: Adaptor>(adaptor: &A) -> Result<(), A::Error> {
+    info!("Running cleanup task");
 
     let result = adaptor
         .delete_events(Utc::now() - Duration::days(90))
-        .await
-        .map_err(ApiError::AdaptorError)?;
+        .await?;
 
     info!(
         "Cleanup successful: {} events and {} people removed",
         result.event_count, result.person_count
     );
-
     Ok(())
+}
+
+pub async fn cleanup_worker<A: Adaptor>(
+    exit_signal: Shared<impl Future<Output = ()>>,
+    shared_state: Arc<Mutex<ApiState<A>>>,
+) {
+    loop {
+        tokio::select! {
+            biased;
+            _ = exit_signal.clone() => return,
+            _ = sleep(std::time::Duration::from_hours(1)) => (),
+        };
+        
+        if let Err(e) = do_cleanup(&shared_state.lock().await.adaptor).await {
+            error!("Hourly cleanup failed: {e:?}");
+        }
+    }
 }
