@@ -12,7 +12,7 @@ import './global.css'
 const karla = Karla({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://crab.fit'),
+  metadataBase: process.env["FRONTEND_BASE_URL"],
 
   title: {
     absolute: 'Crab Fit',

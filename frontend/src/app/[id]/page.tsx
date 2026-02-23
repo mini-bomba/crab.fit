@@ -33,6 +33,7 @@ const Page = async (props: PageProps) => {
   if (!event) notFound()
 
   const { t, i18n } = await useTranslation(['common', 'event'])
+  const eventUrl = new URL(event.id, process.env["FRONTEND_BASE_URL"]).href;
 
   return <>
     <Suspense
@@ -51,10 +52,10 @@ const Page = async (props: PageProps) => {
         >{t('common:created', { date: relativeTimeFormat(Temporal.Instant.fromEpochSeconds(event.created_at), i18n.language) })}</span>
 
         <Copyable className={styles.info}>
-          {`https://crab.fit/${event.id}`}
+          {eventUrl}
         </Copyable>
         <p className={makeClass(styles.info, styles.noPrint)}>
-          <Trans i18nKey="event:nav.shareinfo" t={t} i18n={i18n}>_<a href={`mailto:?subject=${encodeURIComponent(t('event:nav.email_subject', { event_name: event.name }))}&body=${encodeURIComponent(`${t('event:nav.email_body')} https://crab.fit/${event.id}`)}`}>_</a>_</Trans>
+          <Trans i18nKey="event:nav.shareinfo" t={t} i18n={i18n}>_<a href={`mailto:?subject=${encodeURIComponent(t('event:nav.email_subject', { event_name: event.name }))}&body=${encodeURIComponent(`${t('event:nav.email_body')} ${eventUrl}`)}`}>_</a>_</Trans>
         </p>
       </Content>
     </Suspense>
