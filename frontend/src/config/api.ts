@@ -70,11 +70,11 @@ const post = async <S extends z.Schema>(url: string, schema: S, input: unknown, 
 }
 
 // Get
-export const getStats = () => get('/stats', StatsResponse, undefined, { revalidate: 60 })
-export const getEvent = (eventId: string) => get(`/event/${eventId}`, EventResponse)
-export const getPeople = (eventId: string) => get(`/event/${eventId}/people`, PersonResponse.array())
-export const getPerson = (eventId: string, personName: string, password?: string) => get(`/event/${eventId}/people/${personName}`, PersonResponse, password && btoa(password))
+export const getStats = () => get('stats', StatsResponse, undefined, { revalidate: 60 })
+export const getEvent = (eventId: string) => get(`event/${eventId}`, EventResponse)
+export const getPeople = (eventId: string) => get(`event/${eventId}/people`, PersonResponse.array())
+export const getPerson = (eventId: string, personName: string, password?: string) => get(`event/${eventId}/people/${personName}`, PersonResponse, password && btoa(password))
 
 // Post
-export const createEvent = (input: EventInput) => post('/event', EventResponse, EventInput.parse(input))
-export const updatePerson = (eventId: string, personName: string, input: PersonInput, password?: string) => post(`/event/${eventId}/people/${personName}`, PersonResponse, PersonInput.parse(input), password && btoa(password), 'PATCH')
+export const createEvent = (input: EventInput) => post('event', EventResponse, EventInput.parse(input))
+export const updatePerson = (eventId: string, personName: string, input: PersonInput, password?: string) => post(`event/${eventId}/people/${personName}`, PersonResponse, PersonInput.parse(input), password && btoa(password), 'PATCH')
