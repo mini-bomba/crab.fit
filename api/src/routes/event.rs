@@ -4,8 +4,8 @@ use axum::{
     Json,
 };
 use common::{Adaptor, Event};
+use deunicode::AsciiChars;
 use rand::{random_range, rng, seq::IndexedRandom};
-use regex::Regex;
 
 use crate::{
     errors::ApiError,
@@ -121,20 +121,41 @@ fn generate_name() -> String {
 
 // Generate a slug for the crab fit
 fn generate_id(name: &str) -> String {
-    let mut id = encode_name(name.to_string());
+    let mut id = encode_name(name);
     if id.replace('-', "").is_empty() {
-        id = encode_name(generate_name());
+        id = encode_name(&generate_name());
     }
     let number = random_range(100000..=999999);
     format!("{}-{}", id, number)
 }
 
-// Use punycode to encode the name
-fn encode_name(name: String) -> String {
-    let pc = punycode::encode(&name.trim().to_lowercase())
-        .unwrap_or(String::from(""))
-        .trim()
-        .replace(|c: char| !c.is_ascii_alphanumeric() && c != ' ', "");
-    let re = Regex::new(r"\s+").unwrap();
-    re.replace_all(&pc, "-").to_string()
+// use deunicode: convert unicode to ascii wherever possible, skip any non-alphanum chars, dedup
+// whitespace, replace whitespace with -
+fn encode_name(name: &str) -> String {
+    let mut prev_whitespace = false;
+    name.ascii_chars()
+        .flatten() // skip Nones
+        .flat_map(str::chars)
+        .filter_map(|c| {
+            if c.is_ascii_whitespace() {
+                if prev_whitespace {
+                    None
+                } else {
+                    prev_whitespace = true;
+                    Some('-')
+                }
+            } else if c.is_ascii_alphanumeric() {
+                prev_whitespace = false;
+                Some(c.to_ascii_lowercase())
+            } else {
+                prev_whitespace = false;
+                None
+            }
+        })
+        .collect()
+}
+
+#[test]
+fn encode_name_test() {
+    assert_eq!(encode_name("ąęłśćżæ 1234 \t\n 32"), "aelsczae-1234-32")
 }
