@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use axum::{
     extract::{self, Path},
     http::StatusCode,
@@ -106,16 +108,15 @@ pub async fn create_event<A: Adaptor>(
     Ok((StatusCode::CREATED, Json(event.into())))
 }
 
+static NAME_ADJECTIVES: LazyLock<Box<[Box<str>]>> = LazyLock::new(|| serde_json::from_slice(include_bytes!("../res/adjectives.json")).unwrap());
+static NAME_CRABS: LazyLock<Box<[Box<str>]>> = LazyLock::new(|| serde_json::from_slice(include_bytes!("../res/crabs.json")).unwrap());
+
 // Generate a random name based on an adjective and a crab species
 fn generate_name() -> String {
-    let adjectives: Vec<String> =
-        serde_json::from_slice(include_bytes!("../res/adjectives.json")).unwrap();
-    let crabs: Vec<String> = serde_json::from_slice(include_bytes!("../res/crabs.json")).unwrap();
-
     format!(
         "{} {} Crab",
-        adjectives.choose(&mut rng()).unwrap(),
-        crabs.choose(&mut rng()).unwrap()
+        NAME_ADJECTIVES.choose(&mut rng()).unwrap(),
+        NAME_CRABS.choose(&mut rng()).unwrap()
     )
 }
 
