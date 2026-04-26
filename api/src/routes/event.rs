@@ -70,7 +70,14 @@ pub async fn create_event<A: Adaptor>(
 
     // Generate a name if none provided
     let name = match input.name {
-        Some(x) if !x.is_empty() => x.trim().to_string(),
+        Some(x) => {
+            let trimmed = x.trim();
+            if trimmed.is_empty() {
+                generate_name()
+            } else {
+                trimmed.to_string()
+            }
+        },
         _ => generate_name(),
     };
 
