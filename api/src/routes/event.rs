@@ -123,7 +123,7 @@ fn generate_name() -> String {
 // Generate a slug for the crab fit
 fn generate_id(name: &str) -> String {
     let mut id = encode_name(name);
-    if id.replace('-', "").is_empty() {
+    if !id.chars().any(|c| c.is_ascii_alphanumeric()) {
         id = encode_name(&generate_name());
     }
     let number = random_range(100000..=999999);
