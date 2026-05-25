@@ -52,9 +52,13 @@ async fn main() {
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
         .allow_methods([Method::GET, Method::POST, Method::PATCH])
         .allow_origin(
+            [
             env::var("FRONTEND_URL").expect("Missing FRONTEND_URL environment variable")
                 .parse::<HeaderValue>()
                 .unwrap(),
+                "http://localhost".parse::<HeaderValue>().unwrap(),
+                "http://localhost:1234".parse::<HeaderValue>().unwrap(),
+            ]
         );
 
     // Rate limiting configuration (using tower_governor)
