@@ -23,19 +23,13 @@ interface AvailabilityInfo {
  * group availability for each date passed in.
  */
 export const calculateAvailability = (dates: string[], people: Person[]): AvailabilityInfo => {
-  let min = 0
-  let max = people.length
-
   const availabilities: Availability[] = dates.map(date => {
     const names = people.flatMap(p => p.availability.some(d => d === date) ? [p.name] : [])
-    if (names.length < min) {
-      min = names.length
-    }
-    if (names.length > max) {
-      max = names.length
-    }
     return { date, people: names }
   })
+
+  const min = availabilities.length === 0 ? 0 : Math.min(...availabilities.map((x) => x.people.length));
+  const max = availabilities.length === 0 ? 0 : Math.max(...availabilities.map((x) => x.people.length));
 
   return { availabilities, min, max }
 }
